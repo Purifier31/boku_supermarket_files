@@ -1,2 +1,55 @@
-# boku_supermarket_files
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Boku Supermarket — Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div><strong>Boku Supermarket</strong></div>
+    <nav class="nav-links">
+      <a href="index.html">Dashboard</a>
+      <a href="scanner.html">Scanner</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+  <main class="container">
+    <div class="card">
+      <h2>Dashboard</h2>
+      <p>Summary of scanned products (static sample data)</p>
+      <canvas id="statusChart" width="400" height="200"></canvas>
+    </div>
+    <div class="content">
+      <footer>© Boku Supermarket</footer>
+    </div>
+  </main>
+
+  <script>
+    // Static data for chart
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    const data = {
+      labels: ['Expired', 'Valid'],
+      datasets: [{
+        label: 'Products',
+        data: [8, 15],
+        backgroundColor: ['rgba(232,65,24,0.8)','rgba(68,189,50,0.8)'],
+        borderColor: ['rgba(232,65,24,1)','rgba(68,189,50,1)'],
+        borderWidth: 1
+      }]
+    };
+    new Chart(ctx, {
+      type: 'bar',
+      data: data,
+      options: {
+        scales: {
+          y: { beginAtZero: true, precision:0 }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
 
