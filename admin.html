@@ -21,13 +21,13 @@
       <h2>Admin Panel</h2>
       <p>Login required to add products manually.</p>
 
-      <!-- ✅ Updated Login Box with Show Password -->
       <div id="loginBox">
-        <label>Enter Admin Password:</label><br>
+        <label for="adminPass">Enter Admin Password:</label><br>
         <input type="password" id="adminPass" placeholder="Password"
-          style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%">
+          style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%"/>
         <label style="margin-left:8px;">
-          <input type="checkbox" id="togglePassword"> Show Password
+          <input type="checkbox" id="togglePassword"> 
+          onclick="togglepassvisibility()"> Show Password
         </label>
         <button class="primary" onclick="doLogin()">Login</button>
         <div id="loginMsg" style="margin-top:10px;color:#c00"></div>
@@ -54,7 +54,18 @@
     </div>
   </main>
 
-  <script type="module">
+  <script>
+    
+  function togglePassVisibility() {
+    const passInput = document.getElementById('adminPass');
+    const toggle = document.getElementById('togglePassword');
+    if (passInput && toggle) {
+      passInput.type = toggle.checked ? 'text' : 'password';
+    }
+  }
+</script>
+
+<script type="module">
     import { db, fbCollection, fbAddDoc } from './firebase.js';
 
     const ADMIN_PASSWORD = 'admin123';
@@ -63,7 +74,6 @@
     const adminArea = document.getElementById('adminArea');
     const adminResult = document.getElementById('adminResult');
 
-    // ✅ Show/Hide Password Toggle
     document.addEventListener('DOMContentLoaded', () => {
       const passInput = document.getElementById('adminPass');
       const toggle = document.getElementById('togglePassword');
@@ -74,7 +84,6 @@
       }
     });
 
-    // ✅ Login Function
     function doLogin() {
       const p = document.getElementById('adminPass').value;
       if (p === ADMIN_PASSWORD) {
