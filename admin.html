@@ -23,12 +23,11 @@
         <label>Enter Admin Password:</label><br>
         <input type="password" id="adminPass" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%">
         <label>
-          <input type="checkbox" id="togglepassword"> <label for="togglepassword" onclick="
+          <input="checkbox" id="togglepassword"> <label for="togglepassword" onclick="
             const passInput = document.getElementById('adminPass');
             const toggle = document.getElementById('togglepassword');
-            toggle.addEventListener('change', function(){
-              passInput.type = this.checked ? 'text' : 'password';
-            });  
+            toggle.checked = !toggle.checked;
+            passInput.type = toggle.checked ? 'text' : 'password';  
           </label>
         </label>
         <button class="primary" onclick="doLogin()">Login</button>
