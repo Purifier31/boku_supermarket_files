@@ -15,16 +15,19 @@
       <a href="admin.html">Admin</a>
     </nav>
   </header>
+
   <main class="container">
     <div class="card">
       <h2>Admin Panel</h2>
       <p>Login required to add products manually.</p>
+
+      <!-- ✅ Updated Login Box with Show Password -->
       <div id="loginBox">
         <label>Enter Admin Password:</label><br>
-        <input type="password" id="adminPass" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%">
-        <label>
-          <input="checkbox" id="togglepassword"> Password  
-          </label>
+        <input type="password" id="adminPass" placeholder="Password"
+          style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%">
+        <label style="margin-left:8px;">
+          <input type="checkbox" id="togglePassword"> Show Password
         </label>
         <button class="primary" onclick="doLogin()">Login</button>
         <div id="loginMsg" style="margin-top:10px;color:#c00"></div>
@@ -33,10 +36,14 @@
       <div id="adminArea" style="display:none;margin-top:12px">
         <h3>Add Product Manually</h3>
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
-          <input id="pName" placeholder="Product name" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-          <input id="pCode" placeholder="Barcode / Product code" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-          <input id="pExpiry" type="date" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-          <select id="pStatus" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <input id="pName" placeholder="Product name"
+            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <input id="pCode" placeholder="Barcode / Product code"
+            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <input id="pExpiry" type="date"
+            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <select id="pStatus"
+            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
             <option value="Valid">Valid</option>
             <option value="Expired">Expired</option>
           </select>
@@ -49,15 +56,28 @@
 
   <script type="module">
     import { db, fbCollection, fbAddDoc } from './firebase.js';
+
     const ADMIN_PASSWORD = 'admin123';
     const loginMsg = document.getElementById('loginMsg');
     const loginBox = document.getElementById('loginBox');
     const adminArea = document.getElementById('adminArea');
     const adminResult = document.getElementById('adminResult');
 
-    function doLogin(){
+    // ✅ Show/Hide Password Toggle
+    document.addEventListener('DOMContentLoaded', () => {
+      const passInput = document.getElementById('adminPass');
+      const toggle = document.getElementById('togglePassword');
+      if (toggle && passInput) {
+        toggle.addEventListener('change', () => {
+          passInput.type = toggle.checked ? 'text' : 'password';
+        });
+      }
+    });
+
+    // ✅ Login Function
+    function doLogin() {
       const p = document.getElementById('adminPass').value;
-      if(p === ADMIN_PASSWORD){
+      if (p === ADMIN_PASSWORD) {
         loginBox.style.display = 'none';
         adminArea.style.display = 'block';
         loginMsg.textContent = '';
@@ -66,20 +86,33 @@
       }
     }
 
-    async function addProduct(){
+    // ✅ Add Product Function
+    async function addProduct() {
       const name = document.getElementById('pName').value.trim();
       const code = document.getElementById('pCode').value.trim();
       const expiry = document.getElementById('pExpiry').value;
       const status = document.getElementById('pStatus').value;
-      if(!name || !code || !expiry){ adminResult.textContent = 'Please fill all fields.'; return; }
-      try{
-        await fbAddDoc(fbCollection(db,'products'), { name, code, expiry, status, addedAt: new Date().toISOString() });
+
+      if (!name  !code  !expiry) {
+        adminResult.textContent = 'Please fill all fields.';
+        return;
+      }
+
+      try {
+        await fbAddDoc(fbCollection(db, 'products'), {
+          name, code, expiry, status,
+          addedAt: new Date().toISOString()
+        }); 
         adminResult.style.color = 'green';
-        adminResult.textContent = 'Product added successfully.';
+        adminResult.textContent = '✅ Product added successfully.';
         document.getElementById('pName').value = '';
         document.getElementById('pCode').value = '';
         document.getElementById('pExpiry').value = '';
-      }catch(e){ console.error(e); adminResult.style.color = 'red'; adminResult.textContent = 'Error adding product.' }
+      } catch (e) {
+        console.error(e);
+        adminResult.style.color = 'red';
+        adminResult.textContent = '❌ Error adding product.';
+      }
     }
   </script>
 </body>
