@@ -74,15 +74,6 @@
     const adminArea = document.getElementById('adminArea');
     const adminResult = document.getElementById('adminResult');
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const passInput = document.getElementById('adminPass');
-      const toggle = document.getElementById('togglePassword');
-      if (toggle && passInput) {
-        toggle.addEventListener('change', () => {
-          passInput.type = toggle.checked ? 'text' : 'password';
-        });
-      }
-    });
 
     function doLogin() {
       const p = document.getElementById('adminPass').value;
@@ -109,20 +100,31 @@
 
       try {
         await fbAddDoc(fbCollection(db, 'products'), {
-          name, code, expiry, status,
-          addedAt: new Date().toISOString()
+          name,
+           code,
+            expiry,
+             status,
+          addedAt: new
+           Date().toISOString()
         }); 
+
         adminResult.style.color = 'green';
         adminResult.textContent = '✅ Product added successfully.';
+
         document.getElementById('pName').value = '';
+
         document.getElementById('pCode').value = '';
+
         document.getElementById('pExpiry').value = '';
+
       } catch (e) {
         console.error(e);
         adminResult.style.color = 'red';
         adminResult.textContent = '❌ Error adding product.';
       }
     }
+    Window.doLogin = doLogin;
+    Window.addProduct = addProduct;
   </script>
 </body>
 </html>
