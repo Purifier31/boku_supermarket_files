@@ -24,12 +24,11 @@
       <div id="loginBox">
         <label for="adminPass">Enter Admin Password:</label><br>
         <input type="password" id="adminPass" placeholder="Password"
-          style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%"/>
+               style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%">
         <label style="margin-left:8px;">
-          <input type="checkbox" id="togglePassword"> 
-          <onclick="togglepassvisibility()"> Show Password
+          <input type="checkbox" id="togglePassword"> Show Password
         </label>
-        <button class="primary" onclick="doLogin()">Login</button>
+        <button id="loginBtn" class="primary">Login</button>
         <div id="loginMsg" style="margin-top:10px;color:#c00"></div>
       </div>
 
@@ -37,108 +36,79 @@
         <h3>Add Product Manually</h3>
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
           <input id="pName" placeholder="Product name"
-            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
           <input id="pCode" placeholder="Barcode / Product code"
-            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
           <input id="pExpiry" type="date"
-            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-          <select id="pStatus"
-            style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <select id="pStatus" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
             <option value="Valid">Valid</option>
             <option value="Expired">Expired</option>
           </select>
-          <button class="primary" onclick="addProduct()">Add Product</button>
+          <button id="addBtn" class="primary">Add Product</button>
           <div id="adminResult" style="margin-top:8px"></div>
         </div>
       </div>
     </div>
   </main>
 
-  <script>
+  <script type="module">
+    import { db, fbCollection, fbAddDoc } from './firebase.js';
 
-  function togglePassVisibility() {
-    const passInput =
-     document.getElementById('adminPass');
-    const toggle =
-     document.getElementById('togglePassword');
-        if (passInput && toggle) {
+    const ADMIN_PASSWORD = 'admin123';
 
-      passInput.type = toggle.checked ? 'text' : 'password';
-    }
-  }
-</script>
+    const loginMsg = document.getElementById('loginMsg');
+    const loginBox = document.getElementById('loginBox');
+    const adminArea = document.getElementById('adminArea');
+    const adminResult = document.getElementById('adminResult');
+    const passInput = document.getElementById('adminPass');
+    const togglePass = document.getElementById('togglePassword');
+    const loginBtn = document.getElementById('loginBtn');
+    const addBtn = document.getElementById('addBtn');
 
-<script type="module">
-    import { db, fbCollection, fbAddDoc }
-     from './firebase.js';
+    togglePass.addEventListener('change', () => {
+      passInput.type = togglePass.checked ? 'text' : 'password';
+    });
 
-    const ADMIN_PASSWORD = 'admin123' ;
-    const loginMsg =
-     document.getElementById('loginMsg');
-    const loginBox =
-     document.getElementById('loginBox');
-    const adminArea =
-     document.getElementById('adminArea');
-    const adminResult =
-     document.getElementById('adminResult');
-
-
-    function doLogin() {
-      const p =
-       document.getElementById('adminPass').value;
-      
-       if (p === ADMIN_PASSWORD) {
+    loginBtn.addEventListener('click', () => {
+      const entered = passInput.value.trim();
+      if (entered === ADMIN_PASSWORD) {
         loginBox.style.display = 'none';
         adminArea.style.display = 'block';
         loginMsg.textContent = '';
       } else {
         loginMsg.textContent = 'Incorrect password.';
       }
-    }
+    });
 
-    // ✅ Add Product Function
-    async function addProduct() {
-      const name =
-       document.getElementById('pName').value.trim();
-      const code =
-       document.getElementById('pCode').value.trim();
-      const expiry =
-       document.getElementById('pExpiry').value;
-      const status =
-       document.getElementById('pStatus').value;
+    addBtn.addEventListener('click', async () => {
+      const name = document.getElementById('pName').value.trim();
+      const code = document.getElementById('pCode').value.trim();
+      const expiry = document.getElementById('pExpiry').value;
+      const status = document.getElementById('pStatus').value;
 
-      if (!name || !code ||  !expiry) {
-        adminResult.textContent = 'Please fill all fields.';
+      if (!name || !code || !expiry) {
+        adminResult.style.color = 'red';
+        adminResult.textContent = '⚠️ Please fill all fields.';
         return;
       }
 
       try {
         await fbAddDoc(fbCollection(db, 'products'), {
-          name,
-           code,
-            expiry,
-             status,
-          addedAt: new
-           Date().toISOString()
-        }); 
+          name, code, expiry, status, addedAt: new Date().toISOString()
+        });
 
         adminResult.style.color = 'green';
-        adminResult.textContent = '✅ Product added successfully.';
-
+        adminResult.textContent = '✅ Product added successfully!';
         document.getElementById('pName').value = '';
-
         document.getElementById('pCode').value = '';
-
         document.getElementById('pExpiry').value = '';
-
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
         adminResult.style.color = 'red';
         adminResult.textContent = '❌ Error adding product.';
       }
-    }
-    Window.doLogin = doLogin;
-    Window.addProduct = addProduct;
+    });
   </script>
 </body>
 </html>
