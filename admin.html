@@ -57,27 +57,37 @@
   <script>
 
   function togglePassVisibility() {
-    const passInput = document.getElementById('adminPass');
-    const toggle = document.getElementById('togglePassword');
-    if (passInput && toggle) {
+    const passInput =
+     document.getElementById('adminPass');
+    const toggle =
+     document.getElementById('togglePassword');
+        if (passInput && toggle) {
+
       passInput.type = toggle.checked ? 'text' : 'password';
     }
   }
 </script>
 
 <script type="module">
-    import { db, fbCollection, fbAddDoc } from './firebase.js';
+    import { db, fbCollection, fbAddDoc }
+     from './firebase.js';
 
-    const ADMIN_PASSWORD = 'admin123';
-    const loginMsg = document.getElementById('loginMsg');
-    const loginBox = document.getElementById('loginBox');
-    const adminArea = document.getElementById('adminArea');
-    const adminResult = document.getElementById('adminResult');
+    const ADMIN_PASSWORD = admin123 ;
+    const loginMsg =
+     document.getElementById('loginMsg');
+    const loginBox =
+     document.getElementById('loginBox');
+    const adminArea =
+     document.getElementById('adminArea');
+    const adminResult =
+     document.getElementById('adminResult');
 
 
     function doLogin() {
-      const p = document.getElementById('adminPass').value;
-      if (p === ADMIN_PASSWORD) {
+      const p =
+       document.getElementById('adminPass').value;
+      
+       if (p === ADMIN_PASSWORD) {
         loginBox.style.display = 'none';
         adminArea.style.display = 'block';
         loginMsg.textContent = '';
@@ -88,12 +98,16 @@
 
     // ✅ Add Product Function
     async function addProduct() {
-      const name = document.getElementById('pName').value.trim();
-      const code = document.getElementById('pCode').value.trim();
-      const expiry = document.getElementById('pExpiry').value;
-      const status = document.getElementById('pStatus').value;
+      const name =
+       document.getElementById('pName').value.trim();
+      const code =
+       document.getElementById('pCode').value.trim();
+      const expiry =
+       document.getElementById('pExpiry').value;
+      const status =
+       document.getElementById('pStatus').value;
 
-      if (!name  !code  !expiry) {
+      if (!name || !code ||  !expiry) {
         adminResult.textContent = 'Please fill all fields.';
         return;
       }
