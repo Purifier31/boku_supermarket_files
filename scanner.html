@@ -43,7 +43,7 @@
             async (decodedText) => {
               resultBox.textContent = "🔍 Checking product...";
               reader.stop();
-              await checkProduct(decodedText:any);
+              await checkProduct(decodedText);
               setTimeout(() => startScanner(), 4000);
             },
             (error) => {
