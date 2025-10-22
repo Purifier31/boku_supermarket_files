@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Boku Supermarket — Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boku Supermarket — Product Scanner</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
@@ -16,102 +16,71 @@
       <a href="admin.html">Admin</a>
     </nav>
   </header>
+
   <main class="container">
     <div class="card">
-      <h2>Product Scanner</h2>
-      <p>Scan barcode/QR and expiry labels. Results will be saved to Firestore.</p>
+      <h2>📦 Product Expiry Scanner</h2>
+      <p>Scan a product barcode to check its expiry status.</p>
 
-      <div id="qr-reader" style="width:100%;"></div>
-      <div id="productCode" style="margin-top:12px;padding:8px;background:#f1f5f9;border-radius:8px"></div>
-
-      <hr style="margin:18px 0">
-
-      <video id="camera" autoplay playsinline style="border-radius:8px;background:#000"></video>
-      <canvas id="snapshot" style="display:none"></canvas>
-      <div style="margin-top:12px">
-        <button class="primary" onclick="captureAndScan()">📸 Capture & Scan Expiry Date</button>
-      </div>
-
-      <div id="result" style="margin-top:14px"></div>
+      <div id="reader" style="width: 300px; margin: 20px auto;"></div>
+      <div id="result" style="margin-top: 20px; text-align: center; font-size: 1.2em;"></div>
     </div>
   </main>
 
   <script type="module">
-    import { db, fbCollection, fbAddDoc } from './firebase.js';
-    const apiKey = 'K87330449888957'; // replace with your key
+    import { db } from './firebase.js';
+    import { getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-    const productCodeDiv = document.getElementById('productCode');
-    const video = document.getElementById('camera');
-    const canvas = document.getElementById('snapshot');
-    const resultDiv = document.getElementById('result');
-    let currentProductCode = '';
+    const resultBox = document.getElementById("result");
+    const reader = new Html5Qrcode("reader");
 
-    // Start QR scanner
-    function startQrScanner() {
-      const html5QrCode = new Html5Qrcode('qr-reader');
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          html5QrCode.start(devices[0].id, { fps: 10, qrbox: 250 }, message => {
-            currentProductCode = message;
-            productCodeDiv.innerHTML = '<strong>Product Code:</strong> ' + message;
-          }, err => {});
+    function startScanner() {
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          reader.start(
+            cameras[0].id,
+            { fps: 10, qrbox: 250 },
+            async (decodedText) => {
+              resultBox.textContent = "🔍 Checking product...";
+              reader.stop();
+              await checkProduct(decodedText);
+              setTimeout(() => startScanner(), 4000);
+            },
+            (error) => {
+              console.warn("Scanning error:", error);
+            }
+          );
         }
-      }).catch(e => alert('Camera access denied for QR scanner.'));
-    }
-
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video:true });
-        video.srcObject = stream;
-      } catch(e){ alert('Camera access denied for expiry scanner.'); }
-    }
-
-    startQrScanner();
-    startCamera();
-
-    async function captureAndScan() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video,0,0);
-      const base64 = canvas.toDataURL('image/png').split(',')[1];
-      await processOCR(base64);
-    }
-
-    async function processOCR(base64Image) {
-      resultDiv.textContent = '⏳ Scanning...';
-      try {
-        const res = await fetch('https://api.ocr.space/parse/image', {
-          method: 'POST',
-          headers: { 'apikey': apiKey, 'Content-Type':'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ base64Image: 'data:image/png;base64,'+base64Image, language: 'eng' })
-        });
-        const data = await res.json();
-        const text = data?.ParsedResults?.[0]?.ParsedText || '';
-        if (!text) throw new Error('No text detected');
-        const dateMatch = text.match(/\b(\d{1,2}[\/\-\. ]\d{1,2}[\/\-\. ]\d{2,4}|\d{4}-\d{2}-\d{2})\b/);
-        if (dateMatch) {
-          const dateStr = dateMatch[0];
-          const parsedDate = new Date(dateStr);
-          const today = new Date();
-          let status = 'Unknown';
-          if (!isNaN(parsedDate)) {
-            status = parsedDate < today ? 'Expired' : 'Valid';
-            resultDiv.innerHTML = (status === 'Expired' ? '❌ Expired on ' : '✅ Valid until ') + parsedDate.toDateString();
-            // save to firestore
-            await fbAddDoc(fbCollection(db,'scans'), { code: currentProductCode || 'Unknown', expiry: parsedDate.toISOString(), status, time: new Date().toLocaleString() });
-          } else {
-            resultDiv.textContent = '⚠️ Could not parse date: ' + dateStr;
-          }
-        } else {
-          resultDiv.textContent = '⚠️ No expiry date found in text.';
-        }
-
-      } catch(err) {
+      }).catch(err => {
+        resultBox.textContent = "⚠️ Unable to access camera.";
         console.error(err);
-        resultDiv.textContent = '❌ Error scanning image.';
-      }
+      });
     }
+
+    async function checkProduct(code) {
+      const q = query(collection(db, "products"), where("code", "==", code));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        resultBox.innerHTML = `❌ No product found for code: <strong>${code}</strong>`;
+        return;
+      }
+
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const expiryDate = new Date(data.expiry);
+        const today = new Date();
+        const expired = expiryDate < today;
+        resultBox.innerHTML = `
+          ✅ <strong>${data.name}</strong><br>
+          Code: ${data.code}<br>
+          Status: ${expired ? '<span style="color:red;">Expired</span>' : '<span style="color:green;">Valid</span>'}<br>
+          Expiry Date: ${data.expiry}
+        `;
+      });
+    }
+
+    startScanner();
   </script>
 </body>
 </html>
