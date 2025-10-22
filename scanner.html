@@ -23,6 +23,7 @@
       <p>Scan a product barcode to check its expiry status.</p>
 
       <div id="reader" style="width: 300px; margin: 20px auto;"></div>
+      <div id="status" style="text-align:center;color:red;font-weight:bold;"></div>
       <div id="result" style="margin-top: 20px; text-align: center; font-size: 1.2em;"></div>
     </div>
   </main>
@@ -32,33 +33,54 @@
     import { getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const resultBox = document.getElementById("result");
+    const statusBox = document.getElementById("status");
     const reader = new Html5Qrcode("reader");
 
-    function startScanner() {
-      Html5Qrcode.getCameras().then(cameras => {
-        if (cameras && cameras.length) {
-          reader.start(
-            cameras[0].id,
-            { fps: 10, qrbox: 250 },
-            async (decodedText) => {
-              resultBox.textContent = "🔍 Checking product...";
-              reader.stop();
-             console.log("Scanned code:", decodedText);
-              await checkProduct(decodedText.trim());
-              setTimeout(() => startScanner(), 4000);
-            },
-            (error) => {
-              console.warn("Scanning error:", error);
-            }
-          );
+    async function startScanner() {
+      statusBox.textContent = "Starting camera... please allow access.";
+
+      try {
+        const cameras = await Html5Qrcode.getCameras();
+
+        if (!cameras || cameras.length === 0) {
+          statusBox.textContent = "❌ No cameras found on this device.";
+          return;
         }
-      }).catch(err => {
-        resultBox.textContent = "⚠️ Unable to access camera.";
-        console.error(err);
-      });
+
+        const cameraId = cameras[0].id;
+        statusBox.textContent = "✅ Camera found. Initializing scanner...";
+
+        await reader.start(
+          cameraId,
+          { fps: 10, qrbox: 250 },
+          async (decodedText) => {
+            statusBox.textContent = "";
+            resultBox.textContent = "🔍 Checking product...";
+            await reader.stop();
+            await checkProduct(decodedText.trim());
+            setTimeout(() => startScanner(), 4000);
+          },
+          (error) => {
+            console.warn("Scanning error:", error);
+          }
+        );
+
+        console.log("Camera started successfully.");
+
+      } catch (err) {
+        console.error("Camera startup error:", err);
+        if (err.name === "NotAllowedError") {
+          statusBox.textContent = "⚠️ Camera access denied. Please click the lock icon 🔒 in your browser and set Camera → Allow, then refresh.";
+        } else if (err.name === "NotFoundError") {
+          statusBox.textContent = "❌ No camera found on your device.";
+        } else {
+          statusBox.textContent = `⚠️ Unable to start camera: ${err.message}`;
+        }
+      }
     }
 
     async function checkProduct(code) {
+      console.log("Scanned code:", code);
       const q = query(collection(db, "products"), where("code", "==", code));
       const querySnapshot = await getDocs(q);
 
@@ -72,6 +94,7 @@
         const expiryDate = new Date(data.expiry);
         const today = new Date();
         const expired = expiryDate < today;
+
         resultBox.innerHTML = `
           ✅ <strong>${data.name}</strong><br>
           Code: ${data.code}<br>
