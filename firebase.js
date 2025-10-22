@@ -19,8 +19,9 @@ const db = getFirestore(app);
 
 export { db, fbCollection, fbAddDoc, fbGetDocs, fbQuery, fbOrderBy };
 
-["name": "Close up",
+const documentData ={
+  "name": "Close up",
   "code": "6151100134431",
   "expiry": "2028-08-03",
   "status": "valid"
-]
+}
