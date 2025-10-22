@@ -57,7 +57,7 @@
             statusBox.textContent = "";
             resultBox.textContent = "🔍 Checking product...";
             await reader.stop();
-            await checkProduct(decodedText.trim());
+            await checkProduct(decodedText.apply(null, []));
             setTimeout(() => startScanner(), 4000);
           },
           (error) => {
