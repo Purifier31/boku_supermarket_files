@@ -44,7 +44,7 @@
               resultBox.textContent = "🔍 Checking product...";
               reader.stop();
               console.log(`Scanned code: ${decodedText}`);
-              await checkProduct(decodedText.trim());
+              await checkProduct(decodedText);
               setTimeout(() => startScanner(), 4000);
             },
             (error) => {
