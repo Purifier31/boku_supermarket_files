@@ -80,11 +80,20 @@
     }
 
     async function checkProduct(code) {
-      console.log("Scanned code:", code);
+      console.log("Checking product for code:", code);
+      try {
+        resultBox.textContent = "🔍 Querying database...";
+        await queryProduct(code);
+      } catch (error) {
+        console.error("Database query error:", error);
+        resultBox.innerHTML = `❌ Error querying database: ${error.message}`;
+      }
+    
       const q = query(collection(db, "products"), where("code", "==", code));
       const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
+       console.log("Query completed. Number of documents found:", querySnapshot.size, "docs" );
+      
+       if (querySnapshot.empty) {
         resultBox.innerHTML = `❌ No product found for code: <strong>${code}</strong>`;
         return;
       }
