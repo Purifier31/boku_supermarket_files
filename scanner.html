@@ -6,6 +6,16 @@
   <title>Boku Supermarket — Product Scanner</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    #cameraSelect {
+      margin: 10px auto;
+      display: block;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -20,7 +30,9 @@
   <main class="container">
     <div class="card">
       <h2>📦 Product Expiry Scanner</h2>
-      <p>Scan a product barcode to check its expiry status.</p>
+      <p>Scan a product barcode or QR code to check its expiry status.</p>
+
+      <select id="cameraSelect"></select>
 
       <div id="reader" style="width: 300px; margin: 20px auto;"></div>
       <div id="status" style="text-align:center;color:red;font-weight:bold;"></div>
@@ -34,27 +46,56 @@
 
     const resultBox = document.getElementById("result");
     const statusBox = document.getElementById("status");
+    const cameraSelect = document.getElementById("cameraSelect");
+
     const reader = new Html5Qrcode("reader", {
-       formatsToSupport: 
-        [Html5QrcodeSupportedFormats.CODE_128,
-         Html5QrcodeSupportedFormats.EAN_13,
-         Html5QrcodeSupportedFormats.UPC_A ] 
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.UPC_A
+      ]
     });
 
-    async function startScanner() {
-      statusBox.textContent = "Starting camera... please allow access.";
+    let currentCameraId = null;
 
+    async function loadCameras() {
+      statusBox.textContent = "📸 Loading available cameras...";
       try {
         const cameras = await Html5Qrcode.getCameras();
-
-        if (!cameras || cameras.length === 0) {
+        if (!cameras.length) {
           statusBox.textContent = "❌ No cameras found on this device.";
           return;
         }
 
-        const cameraId = cameras[0].id;
-        statusBox.textContent = "✅ Camera found. Initializing scanner...";
+        cameraSelect.innerHTML = cameras
+          .map((cam, i) => `<option value="${cam.id}">${cam.label || "Camera " + (i + 1)}</option>`)
+          .join("");
 
+        const backCam = cameras.find(c => c.label.toLowerCase().includes("back"));
+        currentCameraId = backCam ? backCam.id : cameras[0].id;
+
+        cameraSelect.value = currentCameraId;
+        startScanner(currentCameraId);
+
+        cameraSelect.addEventListener("change", e => {
+          const selected = e.target.value;
+          if (selected !== currentCameraId) {
+            reader.stop().then(() => startScanner(selected));
+          }
+        });
+
+      } catch (err) {
+        console.error("Camera load error:", err);
+        statusBox.textContent = "⚠️ Unable to access camera: " + err.message;
+      }
+    }
+
+    async function startScanner(cameraId) {
+      statusBox.textContent = "✅ Camera found. Initializing scanner...";
+      currentCameraId = cameraId;
+
+      try {
         await reader.start(
           cameraId,
           { fps: 10, qrbox: 250 },
@@ -62,43 +103,25 @@
             statusBox.textContent = "";
             resultBox.textContent = "🔍 Checking product...";
             await reader.stop();
-            await checkProduct(decodedText.apply(null, []));
-            setTimeout(() => startScanner(), 4000);
+            await checkProduct(decodedText.trim());
+            setTimeout(() => startScanner(currentCameraId), 3000);
           },
-          (error) => {
-            console.warn("Scanning error:", error);
-          }
+          (error) => console.warn("Scanning error:", error)
         );
-
-        console.log("Camera started successfully.");
+        statusBox.textContent = "📷 Camera ready — point at barcode or QR code.";
 
       } catch (err) {
-        console.error("Camera startup error:", err);
-        if (err.name === "NotAllowedError") {
-          statusBox.textContent = "⚠️ Camera access denied. Please click the lock icon 🔒 in your browser and set Camera → Allow, then refresh.";
-        } else if (err.name === "NotFoundError") {
-          statusBox.textContent = "❌ No camera found on your device.";
-        } else {
-          statusBox.textContent = `⚠️ Unable to start camera: ${err.message}`;
-        }
+        console.error("Camera start error:", err);
+        statusBox.textContent = "⚠️ Unable to start camera: " + err.message;
       }
     }
 
     async function checkProduct(code) {
-      console.log("Checking product for code:", code);
-      try {
-        resultBox.textContent = "🔍 Querying database...";
-        await queryProduct(code);
-      } catch (error) {
-        console.error("Database query error:", error);
-        resultBox.innerHTML = `❌ Error querying database: ${error.message}`;
-      }
-    
+      console.log("Scanned code:", code);
       const q = query(collection(db, "products"), where("code", "==", code));
       const querySnapshot = await getDocs(q);
-       console.log("Query completed. Number of documents found:", querySnapshot.size, "docs" );
-      
-       if (querySnapshot.empty) {
+
+      if (querySnapshot.empty) {
         resultBox.innerHTML = `❌ No product found for code: <strong>${code}</strong>`;
         return;
       }
@@ -118,7 +141,7 @@
       });
     }
 
-    startScanner();
+    loadCameras();
   </script>
 </body>
 </html>
