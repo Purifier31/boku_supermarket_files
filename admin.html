@@ -21,6 +21,7 @@
       <h2>Admin Panel</h2>
       <p>Login required to add products manually.</p>
 
+      <!-- Login Box -->
       <div id="loginBox">
         <label for="adminPass">Enter Admin Password:</label><br>
         <input type="password" id="adminPass" placeholder="Password"
@@ -32,6 +33,7 @@
         <div id="loginMsg" style="margin-top:10px;color:#c00"></div>
       </div>
 
+      <!-- Admin Form -->
       <div id="adminArea" style="display:none;margin-top:12px">
         <h3>Add Product Manually</h3>
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
@@ -49,11 +51,14 @@
           <div id="adminResult" style="margin-top:8px"></div>
         </div>
       </div>
+
     </div>
   </main>
 
+  <!-- Firebase + Admin Script -->
   <script type="module">
-    import { db, fbCollection, fbAddDoc } from './firebase.js';
+    import { db } from "./firebase.js"; 
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const ADMIN_PASSWORD = 'admin123';
 
@@ -66,10 +71,12 @@
     const loginBtn = document.getElementById('loginBtn');
     const addBtn = document.getElementById('addBtn');
 
+    // Show/hide password
     togglePass.addEventListener('change', () => {
       passInput.type = togglePass.checked ? 'text' : 'password';
     });
 
+    // Login check
     loginBtn.addEventListener('click', () => {
       const entered = passInput.value.trim();
       if (entered === ADMIN_PASSWORD) {
@@ -81,28 +88,29 @@
       }
     });
 
+    // Add product to Firestore
     addBtn.addEventListener('click', async () => {
       const name = document.getElementById('pName').value.trim();
       const code = document.getElementById('pCode').value.trim();
       const expiry = document.getElementById('pExpiry').value;
       const status = document.getElementById('pStatus').value;
 
-      if (!name || !code || !expiry) {
+      if (!name  !code  !expiry) {
         adminResult.style.color = 'red';
         adminResult.textContent = '⚠️ Please fill all fields.';
         return;
       }
 
       try {
-        await fbAddDoc(fbCollection(db, 'products'), {
+        await addDoc(collection(db, 'products'), {
           name, code, expiry, status, addedAt: new Date().toISOString()
         });
-
         adminResult.style.color = 'green';
         adminResult.textContent = '✅ Product added successfully!';
         document.getElementById('pName').value = '';
         document.getElementById('pCode').value = '';
         document.getElementById('pExpiry').value = '';
+
       } catch (error) {
         console.error(error);
         adminResult.style.color = 'red';
