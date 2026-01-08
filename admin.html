@@ -15,13 +15,10 @@
       <a href="admin.html">Admin</a>
     </nav>
   </header>
-
-  <main>
+<main>
     <div class="card">
       <h2>Admin Panel</h2>
       <p>Login required to add products manually.</p>
-
-      <!-- Login Box -->
       <div id="loginBox">
         <input type="password" id="adminPass" placeholder="Enter Admin Password" style="padding:8px;width:60%">
         <label>
@@ -30,8 +27,6 @@
         <button id="loginBtn">Login</button>
         <div id="loginMsg" style="color:red;margin-top:8px"></div>
       </div>
-
-      <!-- Admin Form -->
       <div id="adminArea" style="display:none;margin-top:12px">
         <h3>Add Product Manually</h3>
         <input id="pName" placeholder="Product Name" style="padding:8px;width:100%">
@@ -46,36 +41,27 @@
       </div>
     </div>
   </main>
-
-  <!-- Firebase + Admin Script -->
-  <script type="module">
+      <script type="module">
     import { db } from './firebase.js';
     import { collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-
-    document.addEventListener('DOMContentLoaded', () => {
+         document.addEventListener('DOMContentLoaded', () => {
       const ADMIN_PASSWORD = 'admin123';
-
       const passInput = document.getElementById('adminPass');
       const togglePass = document.getElementById('togglePassword');
       const loginBtn = document.getElementById('loginBtn');
       const loginBox = document.getElementById('loginBox');
       const adminArea = document.getElementById('adminArea');
       const loginMsg = document.getElementById('loginMsg');
-
       const pName = document.getElementById('pName');
       const pCode = document.getElementById('pCode');
       const pExpiry = document.getElementById('pExpiry');
       const pStatus = document.getElementById('pStatus');
       const addBtn = document.getElementById('addBtn');
       const adminResult = document.getElementById('adminResult');
-
-      // Show/hide password
-      togglePass.addEventListener('change', () => {
+         togglePass.addEventListener('change', () => {
         passInput.type = togglePass.checked ? 'text' : 'password';
       });
-
-      // Login
-      loginBtn.addEventListener('click', () => {
+          loginBtn.addEventListener('click', () => {
         if (passInput.value.trim() === ADMIN_PASSWORD) {
           loginBox.style.display = 'none';
           adminArea.style.display = 'block';
@@ -85,26 +71,20 @@
           loginMsg.textContent = 'Incorrect password.';
         }
       });
-
-      // Press Enter to login
-      passInput.addEventListener('keypress', (e) => {
+          passInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') loginBtn.click();
       });
-
-      // Add product to Firestore
-      addBtn.addEventListener('click', async () => {
+          addBtn.addEventListener('click', async () => {
         const name = pName.value.trim();
         const code = pCode.value.trim();
         const expiry = pExpiry.value;
         const status = pStatus.value;
-
-        if (!name || !code || !expiry) {
+           if (!name || !code || !expiry) {
           adminResult.style.color = 'red';
           adminResult.textContent = '⚠️ Please fill all fields.';
           return;
         }
-
-        try {await addDoc(collection(db, 'products'), { name, code, expiry, status, addedAt: new Date().toISOString() });
+try {await fbAddDoc(fbcollection(db, 'products'), { name, code, expiry, status, addedAt: new Date().toISOString() });
           adminResult.style.color = 'green';
           adminResult.textContent = '✅ Product added successfully!';
           pName.value = '';
