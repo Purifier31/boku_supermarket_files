@@ -57,65 +57,77 @@
 
   <!-- Firebase + Admin Script -->
   <script type="module">
-    import { db } from "./firebase.js"; 
+    import { db } from "./firebase.js";
     import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-    const ADMIN_PASSWORD = 'admin123';
+    document.addEventListener('DOMContentLoaded', () => {
+      const ADMIN_PASSWORD = 'admin123';
 
-    const loginMsg = document.getElementById('loginMsg');
-    const loginBox = document.getElementById('loginBox');
-    const adminArea = document.getElementById('adminArea');
-    const adminResult = document.getElementById('adminResult');
-    const passInput = document.getElementById('adminPass');
-    const togglePass = document.getElementById('togglePassword');
-    const loginBtn = document.getElementById('loginBtn');
-    const addBtn = document.getElementById('addBtn');
+      // Login Elements
+      const passInput = document.getElementById('adminPass');
+      const togglePass = document.getElementById('togglePassword');
+      const loginBtn = document.getElementById('loginBtn');
+      const loginBox = document.getElementById('loginBox');
+      const adminArea = document.getElementById('adminArea');
+      const loginMsg = document.getElementById('loginMsg');
 
-    // Show/hide password
-    togglePass.addEventListener('change', () => {
-      passInput.type = togglePass.checked ? 'text' : 'password';
-    });
+      // Show/hide password
+      togglePass.addEventListener('change', () => {
+        passInput.type = togglePass.checked ? 'text' : 'password';
+      });
 
-    // Login check
-    loginBtn.addEventListener('click', () => {
-      const entered = passInput.value.trim();
-      if (entered === ADMIN_PASSWORD) {
-        loginBox.style.display = 'none';
-        adminArea.style.display = 'block';
-        loginMsg.textContent = '';
-      } else {
-        loginMsg.textContent = 'Incorrect password.';
-      }
-    });
+      // Login button click
+      loginBtn.addEventListener('click', () => {
+        const entered = passInput.value.trim();
+        if (entered === ADMIN_PASSWORD) {
+          loginBox.style.display = 'none';
+          adminArea.style.display = 'block';
+          loginMsg.textContent = '';
+          passInput.value = '';
+        } else {
+          loginMsg.textContent = 'Incorrect password.';
+        }
+      });
 
-    // Add product to Firestore
-    addBtn.addEventListener('click', async () => {
-      const name = document.getElementById('pName').value.trim();
-      const code = document.getElementById('pCode').value.trim();
-      const expiry = document.getElementById('pExpiry').value;
-      const status = document.getElementById('pStatus').value;
+      // Press Enter to login
+      passInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
+      });
 
-      if (!name  !code  !expiry) {
-        adminResult.style.color = 'red';
-        adminResult.textContent = '⚠️ Please fill all fields.';
-        return;
-      }
+      // Add product elements
+      const addBtn = document.getElementById('addBtn');
+      const adminResult = document.getElementById('adminResult');
 
-      try {
-        await addDoc(collection(db, 'products'), {
-          name, code, expiry, status, addedAt: new Date().toISOString()
-        });
-        adminResult.style.color = 'green';
-        adminResult.textContent = '✅ Product added successfully!';
-        document.getElementById('pName').value = '';
-        document.getElementById('pCode').value = '';
-        document.getElementById('pExpiry').value = '';
+      // Add product to Firestore
+      addBtn.addEventListener('click', async () => {
+        const name = document.getElementById('pName').value.trim();
+        const code = document.getElementById('pCode').value.trim();
+        const expiry = document.getElementById('pExpiry').value;
+        const status = document.getElementById('pStatus').value;
 
-      } catch (error) {
-        console.error(error);
-        adminResult.style.color = 'red';
-        adminResult.textContent = '❌ Error adding product.';
-      }
+        if (!name  !code  !expiry) {
+          adminResult.style.color = 'red';
+          adminResult.textContent = '⚠️ Please fill all fields.';
+          return;
+        }
+
+        try {
+          await addDoc(collection(db, 'products'), {
+            name, code, expiry, status, addedAt: new Date().toISOString()
+          });
+
+          adminResult.style.color = 'green';
+          adminResult.textContent = '✅ Product added successfully!';
+          document.getElementById('pName').value = '';
+          document.getElementById('pCode').value = '';
+          document.getElementById('pExpiry').value = '';
+
+        } catch (error) {
+          console.error(error);
+          adminResult.style.color = 'red';
+          adminResult.textContent = '❌ Error adding product.';
+        }
+      });
     });
   </script>
 </body>
