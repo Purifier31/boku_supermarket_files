@@ -105,7 +105,7 @@
         const expiry = document.getElementById('pExpiry').value;
         const status = document.getElementById('pStatus').value;
 
-        if (!name  !code  !expiry) {
+        if (!name || !code || !expiry) {
           adminResult.style.color = 'red';
           adminResult.textContent = '⚠️ Please fill all fields.';
           return;
