@@ -1,117 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Boku Supermarket — Admin</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Boku Supermarket – Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+    }
+
+    header {
+      background: #1e40af;
+      color: #fff;
+      padding: 15px;
+      font-size: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      background: #1e40af;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1e3a8a;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .msg {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <div><strong>Boku Supermarket</strong></div>
-    <nav class="nav-links">
-      <a href="index.html">Dashboard</a>
-      <a href="scanner.html">Scanner</a>
-      <a href="admin.html">Admin</a>
-    </nav>
-  </header>
 
-  <main class="container">
-    <div class="card">
-      <h2>Admin Panel</h2>
-      <p>Login required to add products manually.</p>
+<header>Boku Supermarket – Admin</header>
 
-      <div id="loginBox">
-        <label for="adminPass">Enter Admin Password:</label><br>
-        <input type="password" id="adminPass" placeholder="Password"
-               style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%">
-        <label style="margin-left:8px;">
-          <input type="checkbox" id="togglePassword"> Show Password
-        </label>
-        <button id="loginBtn" class="primary">Login</button>
-        <div id="loginMsg" style="margin-top:10px;color:#c00"></div>
-      </div>
+<div class="container" id="loginBox">
+  <h3>Admin Login</h3>
+  <input type="password" id="adminPass" placeholder="Enter admin password" />
+  <label>
+    <input type="checkbox" id="togglePassword" /> Show password
+  </label>
+  <button id="loginBtn">Login</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
 
-      <div id="adminArea" style="display:none;margin-top:12px">
-        <h3>Add Product Manually</h3>
-        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
-          <input id="pName" placeholder="Product name"
-                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-          <input id="pCode" placeholder="Barcode / Product code"
-                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-          <input id="pExpiry" type="date"
-                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-          <select id="pStatus" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-            <option value="Valid">Valid</option>
-            <option value="Expired">Expired</option>
-          </select>
-          <button id="addBtn" class="primary">Add Product</button>
-          <div id="adminResult" style="margin-top:8px"></div>
-        </div>
-      </div>
-    </div>
-  </main>
+<div class="container hidden" id="adminArea">
+  <h3>Add Product</h3>
 
-  <script type="module">
-    import { db, fbCollection, fbAddDoc } from './firebase.js';
+  <input type="text" id="pName" placeholder="Product name" />
+  <input type="text" id="pCode" placeholder="Product code (barcode / QR value)" />
+  <input type="date" id="pExpiry" />
+  <select id="pStatus">
+    <option value="Valid">Valid</option>
+    <option value="Expired">Expired</option>
+  </select>
 
-    const ADMIN_PASSWORD = 'admin123';
+  <button id="addBtn">Add Product</button>
+  <div class="msg" id="adminResult"></div>
+</div>
 
-    const loginMsg = document.getElementById('loginMsg');
-    const loginBox = document.getElementById('loginBox');
-    const adminArea = document.getElementById('adminArea');
-    const adminResult = document.getElementById('adminResult');
-    const passInput = document.getElementById('adminPass');
-    const togglePass = document.getElementById('togglePassword');
-    const loginBtn = document.getElementById('loginBtn');
-    const addBtn = document.getElementById('addBtn');
-
-    togglePass.addEventListener('change', () => {
-      passInput.type = togglePass.checked ? 'text' : 'password';
-    });
-
-    loginBtn.addEventListener('click', () => {
-      const entered = passInput.value.trim();
-      if (entered === ADMIN_PASSWORD) {
-        loginBox.style.display = 'none';
-        adminArea.style.display = 'block';
-        loginMsg.textContent = '';
-      } else {
-        loginMsg.textContent = 'Incorrect password.';
-      }
-    });
-
-    addBtn.addEventListener('click', async () => {
-      const name = document.getElementById('pName').value.trim();
-      const code = document.getElementById('pCode').value.trim();
-      const expiry = document.getElementById('pExpiry').value;
-      const status = document.getElementById('pStatus').value;
-
-      if (!name || !code || !expiry) {
-        adminResult.style.color = 'red';
-        adminResult.textContent = '⚠️ Please fill all fields.';
-        return;
-      }
-
-      try {
-        await fbAddDoc(fbCollection(db, 'products'), {
-          name, code, expiry, status, addedAt: new Date().toISOString()
-        });
-
-        adminResult.style.color = 'green';
-        adminResult.textContent = '✅ Product added successfully!';
-        document.getElementById('pName').value = '';
-        document.getElementById('pCode').value = '';
-        document.getElementById('pExpiry').value = '';
-      } catch (error) {
-        console.error(error);
-        adminResult.style.color = 'red';
-        adminResult.textContent = '❌ Error adding product.';
-      }
-    });
-  </script>
-  
-  <script type="module">
+<!-- FIREBASE + LOGIC -->
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
@@ -127,33 +101,61 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const form = document.querySelector("form");
-  const message = document.createElement("p");
-  form.appendChild(message);
+  const ADMIN_PASSWORD = "admin123";
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  const loginBox = document.getElementById("loginBox");
+  const adminArea = document.getElementById("adminArea");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginMsg = document.getElementById("loginMsg");
+  const passInput = document.getElementById("adminPass");
+  const togglePass = document.getElementById("togglePassword");
 
-    const name = form.querySelector("input[type='text']").value;
-    const code = form.querySelector("input[type='number']").value;
-    const expiry = form.querySelector("input[type='date']").value;
+  togglePass.addEventListener("change", () => {
+    passInput.type = togglePass.checked ? "text" : "password";
+  });
+
+  loginBtn.addEventListener("click", () => {
+    if (passInput.value === ADMIN_PASSWORD) {
+      loginBox.classList.add("hidden");
+      adminArea.classList.remove("hidden");
+    } else {
+      loginMsg.textContent = "❌ Wrong password";
+      loginMsg.style.color = "red";
+    }
+  });
+
+  document.getElementById("addBtn").addEventListener("click", async () => {
+    const name = document.getElementById("pName").value.trim();
+    const code = document.getElementById("pCode").value.trim();
+    const expiry = document.getElementById("pExpiry").value;
+    const status = document.getElementById("pStatus").value;
+    const result = document.getElementById("adminResult");
+
+    if (!name || !code || !expiry) {
+      result.textContent = "⚠️ Fill all fields";
+      result.style.color = "red";
+      return;
+    }
 
     try {
       await addDoc(collection(db, "products"), {
         name,
         code,
         expiry,
-        createdAt: new Date()
+        status,
+        createdAt: new Date().toISOString()
       });
 
-      message.textContent = "✅ Product added successfully";
-      message.style.color = "green";
-      form.reset();
+      result.textContent = "✅ Product added successfully";
+      result.style.color = "green";
+      document.getElementById("pName").value = "";
+      document.getElementById("pCode").value = "";
+      document.getElementById("pExpiry").value = "";
 
     } catch (err) {
       console.error(err);
-      message.textContent = "❌ Error adding product";
-      message.style.color = "red";
+      result.textContent = "❌ Failed to add product";
+      result.style.color = "red";
     }
   });
 </script>
