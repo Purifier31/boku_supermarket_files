@@ -1,7 +1,7 @@
 // firebase.js (ES module)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-import { collection as fbCollection, addDoc as fbAddDoc, getDocs as fbGetDocs, query as fbQuery, orderBy as fbOrderBy } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { collection as fbCollection, addDoc as fbAddDoc, getDocs as fbGetDocs, query as fbQuery, orderBy as fbOrderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBzgKb9arTPpBu_uq3ELKutw3pH0NeMP7o",
@@ -18,9 +18,3 @@ const db = getFirestore(app);
 
 export { db, fbCollection, fbAddDoc, fbGetDocs, fbQuery, fbOrderBy };
 
-const documentData ={
-  "name": "Close up",
-  "code": "6151100134431",
-  "expiry": "2028-08-03",
-  "status": "valid"
-}

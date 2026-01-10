@@ -110,5 +110,53 @@
       }
     });
   </script>
+  
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDShiu6oEezcRXolmFW0X8z2YfFjFgz3Sk",
+    authDomain: "boku-supermarket.firebaseapp.com",
+    projectId: "boku-supermarket",
+    storageBucket: "boku-supermarket.appspot.com",
+    messagingSenderId: "768497460555",
+    appId: "1:768497460555:web:b4fc4d2d927bfc2ee8b4ce"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const form = document.querySelector("form");
+  const message = document.createElement("p");
+  form.appendChild(message);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = form.querySelector("input[type='text']").value;
+    const code = form.querySelector("input[type='number']").value;
+    const expiry = form.querySelector("input[type='date']").value;
+
+    try {
+      await addDoc(collection(db, "products"), {
+        name,
+        code,
+        expiry,
+        createdAt: new Date()
+      });
+
+      message.textContent = "✅ Product added successfully";
+      message.style.color = "green";
+      form.reset();
+
+    } catch (err) {
+      console.error(err);
+      message.textContent = "❌ Error adding product";
+      message.style.color = "red";
+    }
+  });
+</script>
+
 </body>
 </html>
