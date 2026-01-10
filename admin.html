@@ -1,101 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Boku Supermarket — Admin</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header>
     <div><strong>Boku Supermarket</strong></div>
-    <nav>
+    <nav class="nav-links">
       <a href="index.html">Dashboard</a>
       <a href="scanner.html">Scanner</a>
       <a href="admin.html">Admin</a>
     </nav>
   </header>
-<main>
+
+  <main class="container">
     <div class="card">
       <h2>Admin Panel</h2>
       <p>Login required to add products manually.</p>
+
       <div id="loginBox">
-        <input type="password" id="adminPass" placeholder="Enter Admin Password" style="padding:8px;width:60%">
-        <label>
+        <label for="adminPass">Enter Admin Password:</label><br>
+        <input type="password" id="adminPass" placeholder="Password"
+               style="padding:8px;border-radius:6px;border:1px solid #ddd;width:60%">
+        <label style="margin-left:8px;">
           <input type="checkbox" id="togglePassword"> Show Password
         </label>
-        <button id="loginBtn">Login</button>
-        <div id="loginMsg" style="color:red;margin-top:8px"></div>
+        <button id="loginBtn" class="primary">Login</button>
+        <div id="loginMsg" style="margin-top:10px;color:#c00"></div>
       </div>
+
       <div id="adminArea" style="display:none;margin-top:12px">
         <h3>Add Product Manually</h3>
-        <input id="pName" placeholder="Product Name" style="padding:8px;width:100%">
-        <input id="pCode" placeholder="Barcode / Product Code" style="padding:8px;width:100%">
-        <input id="pExpiry" type="date" style="padding:8px;width:100%">
-        <select id="pStatus" style="padding:8px;width:100%">
-          <option value="Valid">Valid</option>
-          <option value="Expired">Expired</option>
-        </select>
-        <button id="addBtn">Add Product</button>
-        <div id="adminResult" style="margin-top:8px"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+          <input id="pName" placeholder="Product name"
+                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <input id="pCode" placeholder="Barcode / Product code"
+                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <input id="pExpiry" type="date"
+                 style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+          <select id="pStatus" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+            <option value="Valid">Valid</option>
+            <option value="Expired">Expired</option>
+          </select>
+          <button id="addBtn" class="primary">Add Product</button>
+          <div id="adminResult" style="margin-top:8px"></div>
+        </div>
       </div>
     </div>
   </main>
-      <script type="module">
-    import { db } from './firebase.js';
-    import { collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-         document.addEventListener('DOMContentLoaded', () => {
-      const ADMIN_PASSWORD = 'admin123';
-      const passInput = document.getElementById('adminPass');
-      const togglePass = document.getElementById('togglePassword');
-      const loginBtn = document.getElementById('loginBtn');
-      const loginBox = document.getElementById('loginBox');
-      const adminArea = document.getElementById('adminArea');
-      const loginMsg = document.getElementById('loginMsg');
-      const pName = document.getElementById('pName');
-      const pCode = document.getElementById('pCode');
-      const pExpiry = document.getElementById('pExpiry');
-      const pStatus = document.getElementById('pStatus');
-      const addBtn = document.getElementById('addBtn');
-      const adminResult = document.getElementById('adminResult');
-         togglePass.addEventListener('change', () => {
-        passInput.type = togglePass.checked ? 'text' : 'password';
-      });
-          loginBtn.addEventListener('click', () => {
-        if (passInput.value.trim() === ADMIN_PASSWORD) {
-          loginBox.style.display = 'none';
-          adminArea.style.display = 'block';
-          loginMsg.textContent = '';
-          passInput.value = '';
-        } else {
-          loginMsg.textContent = 'Incorrect password.';
-        }
-      });
-          passInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') loginBtn.click();
-      });
-          addBtn.addEventListener('click', async () => {
-        const name = pName.value.trim();
-        const code = pCode.value.trim();
-        const expiry = pExpiry.value;
-        const status = pStatus.value;
-           if (!name || !code || !expiry) {
-          adminResult.style.color = 'red';
-          adminResult.textContent = '⚠️ Please fill all fields.';
-          return;
-        }
-try {await fbAddDoc(fbcollection(db, 'products'), { name, code, expiry, status, addedAt: new Date().toISOString() });
-          adminResult.style.color = 'green';
-          adminResult.textContent = '✅ Product added successfully!';
-          pName.value = '';
-          pCode.value = '';
-          pExpiry.value = '';
-        } catch (err) {
-          console.error(err);
-          adminResult.style.color = 'red';
-          adminResult.textContent = '❌ Error adding product.';
-        }
-      });
+
+  <script type="module">
+    import { db, fbCollection, fbAddDoc } from './firebase.js';
+
+    const ADMIN_PASSWORD = 'admin123';
+
+    const loginMsg = document.getElementById('loginMsg');
+    const loginBox = document.getElementById('loginBox');
+    const adminArea = document.getElementById('adminArea');
+    const adminResult = document.getElementById('adminResult');
+    const passInput = document.getElementById('adminPass');
+    const togglePass = document.getElementById('togglePassword');
+    const loginBtn = document.getElementById('loginBtn');
+    const addBtn = document.getElementById('addBtn');
+
+    togglePass.addEventListener('change', () => {
+      passInput.type = togglePass.checked ? 'text' : 'password';
+    });
+
+    loginBtn.addEventListener('click', () => {
+      const entered = passInput.value.trim();
+      if (entered === ADMIN_PASSWORD) {
+        loginBox.style.display = 'none';
+        adminArea.style.display = 'block';
+        loginMsg.textContent = '';
+      } else {
+        loginMsg.textContent = 'Incorrect password.';
+      }
+    });
+
+    addBtn.addEventListener('click', async () => {
+      const name = document.getElementById('pName').value.trim();
+      const code = document.getElementById('pCode').value.trim();
+      const expiry = document.getElementById('pExpiry').value;
+      const status = document.getElementById('pStatus').value;
+
+      if (!name || !code || !expiry) {
+        adminResult.style.color = 'red';
+        adminResult.textContent = '⚠️ Please fill all fields.';
+        return;
+      }
+
+      try {
+        await fbAddDoc(fbCollection(db, 'products'), {
+          name, code, expiry, status, addedAt: new Date().toISOString()
+        });
+
+        adminResult.style.color = 'green';
+        adminResult.textContent = '✅ Product added successfully!';
+        document.getElementById('pName').value = '';
+        document.getElementById('pCode').value = '';
+        document.getElementById('pExpiry').value = '';
+      } catch (error) {
+        console.error(error);
+        adminResult.style.color = 'red';
+        adminResult.textContent = '❌ Error adding product.';
+      }
     });
   </script>
 </body>
