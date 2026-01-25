@@ -4,13 +4,12 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.11.0/firebas
 import { collection as fbCollection, addDoc as fbAddDoc, getDocs as fbGetDocs, query as fbQuery, orderBy as fbOrderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBzgKb9arTPpBu_uq3ELKutw3pH0NeMP7o",
-  authDomain: "boku--supermarket.firebaseapp.com",
-  projectId: "boku--supermarket",
-  storageBucket: "boku--supermarket.firebasestorage.app",
-  messagingSenderId: "254106843610",
-  appId: "1:254106843610:web:f05cd78b7cf5fe505228e3",
-  measurementId: "G-PHNVC9CDZG"
+  apiKey: "AIzaSyDta4QPZsFvmTykHrrMRYXnsvZVoMPvliM",
+  authDomain: "emma-bokku.firebaseapp.com",
+  projectId: "emma-bokku",
+  storageBucket: "emma-bokku.firebasestorage.app",
+  messagingSenderId: "517649758088",
+  appId: "1:517649758088:web:bf7f630aa277060d65ac3d"
 };
 
 const app = initializeApp(firebaseConfig);

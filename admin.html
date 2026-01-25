@@ -59,18 +59,32 @@
 
 <header>Boku Supermarket – Admin</header>
 
-<div class="container" id="loginBox">
-  <h3>Admin Login</h3>
-  <input type="password" id="adminPass" placeholder="Enter admin password" />
-  <label>
-    <input type="checkbox" id="togglePassword" /> Show password
-  </label>
-  <button id="loginBtn">Login</button>
-  <div class="msg" id="loginMsg"></div>
+<div class="container" id="authBox">
+  <div id="loginSection">
+    <h3>Admin Login</h3>
+    <input type="email" id="loginEmail" placeholder="Email" />
+    <input type="password" id="loginPassword" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <p style="text-align: center; font-size: 14px;">Don't have an account? <a href="#" id="showSignup" style="color: #1e40af; cursor: pointer;">Sign up</a></p>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <div id="signupSection" class="hidden">
+    <h3>Create Admin Account</h3>
+    <input type="email" id="signupEmail" placeholder="Email" />
+    <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" />
+    <input type="password" id="signupConfirm" placeholder="Confirm password" />
+    <button id="signupBtn">Sign Up</button>
+    <p style="text-align: center; font-size: 14px;">Already have an account? <a href="#" id="showLogin" style="color: #1e40af; cursor: pointer;">Login</a></p>
+    <div class="msg" id="signupMsg"></div>
+  </div>
 </div>
 
 <div class="container hidden" id="adminArea">
-  <h3>Add Product</h3>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h3>Add Product</h3>
+    <button id="logoutBtn" style="width: auto; padding: 5px 15px;">Logout</button>
+  </div>
 
   <input type="text" id="pName" placeholder="Product name" />
   <input type="text" id="pCode" placeholder="Product code (barcode / QR value)" />
@@ -87,43 +101,141 @@
 <!-- FIREBASE + LOGIC -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyDShiu6oEezcRXolmFW0X8z2YfFjFgz3Sk",
-    authDomain: "boku-supermarket.firebaseapp.com",
-    projectId: "boku-supermarket",
-    storageBucket: "boku-supermarket.appspot.com",
-    messagingSenderId: "768497460555",
-    appId: "1:768497460555:web:b4fc4d2d927bfc2ee8b4ce"
+    apiKey: "AIzaSyDta4QPZsFvmTykHrrMRYXnsvZVoMPvliM",
+    authDomain: "emma-bokku.firebaseapp.com",
+    projectId: "emma-bokku",
+    storageBucket: "emma-bokku.firebasestorage.app",
+    messagingSenderId: "517649758088",
+    appId: "1:517649758088:web:bf7f630aa277060d65ac3d"
   };
 
   const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const ADMIN_PASSWORD = "admin123";
-
-  const loginBox = document.getElementById("loginBox");
+  // DOM Elements
+  const authBox = document.getElementById("authBox");
   const adminArea = document.getElementById("adminArea");
+  const loginSection = document.getElementById("loginSection");
+  const signupSection = document.getElementById("signupSection");
+
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
   const loginBtn = document.getElementById("loginBtn");
   const loginMsg = document.getElementById("loginMsg");
-  const passInput = document.getElementById("adminPass");
-  const togglePass = document.getElementById("togglePassword");
+  const showSignup = document.getElementById("showSignup");
 
-  togglePass.addEventListener("change", () => {
-    passInput.type = togglePass.checked ? "text" : "password";
+  const signupEmail = document.getElementById("signupEmail");
+  const signupPassword = document.getElementById("signupPassword");
+  const signupConfirm = document.getElementById("signupConfirm");
+  const signupBtn = document.getElementById("signupBtn");
+  const signupMsg = document.getElementById("signupMsg");
+  const showLogin = document.getElementById("showLogin");
+
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  // Auth State Monitoring
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is logged in
+      authBox.classList.add("hidden");
+      adminArea.classList.remove("hidden");
+      loginEmail.value = "";
+      loginPassword.value = "";
+      signupEmail.value = "";
+      signupPassword.value = "";
+      signupConfirm.value = "";
+      loginMsg.textContent = "";
+      signupMsg.textContent = "";
+    } else {
+      // User is logged out
+      authBox.classList.remove("hidden");
+      adminArea.classList.add("hidden");
+    }
   });
 
-  loginBtn.addEventListener("click", () => {
-    if (passInput.value === ADMIN_PASSWORD) {
-      loginBox.classList.add("hidden");
-      adminArea.classList.remove("hidden");
-    } else {
-      loginMsg.textContent = "❌ Wrong password";
+  // Toggle between login and signup
+  showSignup.addEventListener("click", (e) => {
+    e.preventDefault();
+    loginSection.classList.add("hidden");
+    signupSection.classList.remove("hidden");
+  });
+
+  showLogin.addEventListener("click", (e) => {
+    e.preventDefault();
+    loginSection.classList.remove("hidden");
+    signupSection.classList.add("hidden");
+  });
+
+  // Login
+  loginBtn.addEventListener("click", async () => {
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value.trim();
+
+    if (!email || !password) {
+      loginMsg.textContent = "⚠️ Fill all fields";
+      loginMsg.style.color = "red";
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      loginMsg.textContent = "✅ Logging in...";
+      loginMsg.style.color = "green";
+    } catch (err) {
+      loginMsg.textContent = "❌ " + err.message;
       loginMsg.style.color = "red";
     }
   });
 
+  // Sign Up
+  signupBtn.addEventListener("click", async () => {
+    const email = signupEmail.value.trim();
+    const password = signupPassword.value.trim();
+    const confirm = signupConfirm.value.trim();
+
+    if (!email || !password || !confirm) {
+      signupMsg.textContent = "⚠️ Fill all fields";
+      signupMsg.style.color = "red";
+      return;
+    }
+
+    if (password !== confirm) {
+      signupMsg.textContent = "⚠️ Passwords do not match";
+      signupMsg.style.color = "red";
+      return;
+    }
+
+    if (password.length < 6) {
+      signupMsg.textContent = "⚠️ Password must be at least 6 characters";
+      signupMsg.style.color = "red";
+      return;
+    }
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      signupMsg.textContent = "✅ Account created! Logging in...";
+      signupMsg.style.color = "green";
+    } catch (err) {
+      signupMsg.textContent = "❌ " + err.message;
+      signupMsg.style.color = "red";
+    }
+  });
+
+  // Logout
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  });
+
+  // Add Product
   document.getElementById("addBtn").addEventListener("click", async () => {
     const name = document.getElementById("pName").value.trim();
     const code = document.getElementById("pCode").value.trim();
@@ -143,7 +255,8 @@
         code,
         expiry,
         status,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        createdBy: auth.currentUser.uid
       });
 
       result.textContent = "✅ Product added successfully";
@@ -154,7 +267,7 @@
 
     } catch (err) {
       console.error(err);
-      result.textContent = "❌ Failed to add product";
+      result.textContent = "❌ Failed to Add Product"; ;
       result.style.color = "red";
     }
   });
